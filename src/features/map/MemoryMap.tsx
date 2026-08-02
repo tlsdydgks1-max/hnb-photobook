@@ -7,6 +7,21 @@ type MemoryMapProps = {
   memories: Memory[];
 };
 
+type MapMemoryGroup = {
+  key: string;
+  latitude: number;
+  longitude: number;
+  memories: Memory[];
+};
+
+function coordKey(memory: Memory) {
+  return `${memory.exif!.latitude!.toFixed(6)},${memory.exif!.longitude!.toFixed(6)}`;
+}
+
+function escapeAttribute(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
+}
+
 export function MemoryMap({ memories }: MemoryMapProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<NaverMapInstance | null>(null);
@@ -17,13 +32,38 @@ export function MemoryMap({ memories }: MemoryMapProps) {
     "idle" | "ready" | "missing-key" | "error"
   >("idle");
   const mappedMemories = useMemo(() => memories.filter(hasGps), [memories]);
+  const memoryGroups = useMemo(() => {
+    const groups = new Map<string, MapMemoryGroup>();
+
+    mappedMemories.forEach((memory) => {
+      const key = coordKey(memory);
+      const group = groups.get(key);
+
+      if (group) {
+        group.memories.push(memory);
+        return;
+      }
+
+      groups.set(key, {
+        key,
+        latitude: memory.exif!.latitude!,
+        longitude: memory.exif!.longitude!,
+        memories: [memory],
+      });
+    });
+
+    return [...groups.values()];
+  }, [mappedMemories]);
   const selectedMemory =
     mappedMemories.find((memory) => memory.id === selectedId) ??
     mappedMemories[0];
+  const selectedGroup = selectedMemory
+    ? memoryGroups.find((group) => group.key === coordKey(selectedMemory))
+    : undefined;
 
-  const selectMapMemory = (memory: Memory) => {
+  const selectMapMemory = (memory: Memory, showDetails = false) => {
     setSelectedId(memory.id);
-    setIsSheetExpanded(false);
+    setIsSheetExpanded(showDetails);
 
     if (!window.naver?.maps || !memory.exif?.latitude || !memory.exif.longitude) {
       return;
@@ -104,32 +144,32 @@ export function MemoryMap({ memories }: MemoryMapProps) {
     mapInstanceRef.current = map;
     const bounds = new maps.LatLngBounds(firstLatLng, firstLatLng);
 
-    mappedMemories.forEach((memory) => {
-      const latitude = memory.exif!.latitude!;
-      const longitude = memory.exif!.longitude!;
-      const position = new maps.LatLng(latitude, longitude);
+    memoryGroups.forEach((group) => {
+      const position = new maps.LatLng(group.latitude, group.longitude);
       bounds.extend(position);
+      const memory = group.memories[0];
+      const count = group.memories.length;
 
       const marker = new maps.Marker({
         position,
         map,
         title: memory.place,
         icon: {
-          content: `<button class="memory-map-marker" aria-label="${memory.place}"><img src="${memory.image}" alt="" /></button>`,
+          content: `<button class="memory-map-marker" aria-label="${escapeAttribute(memory.place)}"><img src="${memory.image}" alt="" />${count > 1 ? `<span>${count}</span>` : ""}</button>`,
           size: new maps.Size(52, 52),
           anchor: new maps.Point(26, 52),
         },
       });
 
       maps.Event.addListener(marker, "click", () => {
-        selectMapMemory(memory);
+        selectMapMemory(memory, true);
       });
     });
 
-    if (mappedMemories.length > 1) {
+    if (memoryGroups.length > 1) {
       map.fitBounds(bounds, { top: 80, right: 42, bottom: 220, left: 42 });
     }
-  }, [loadState, mappedMemories]);
+  }, [loadState, mappedMemories, memoryGroups]);
 
   return (
     <section className="screen map-screen">
@@ -193,26 +233,41 @@ export function MemoryMap({ memories }: MemoryMapProps) {
           </button>
         )}
 
-        <div className="map-place-list">
-          {mappedMemories.map((memory) => (
-            <button
-              className={
-                selectedMemory?.id === memory.id
-                  ? "map-place-card active"
-                  : "map-place-card"
-              }
-              key={memory.id}
-              onClick={() => selectMapMemory(memory)}
-            >
-              <img src={memory.image} alt="" />
-              <div>
-                <strong>{memory.place}</strong>
-                <small>{memory.date}</small>
-                <em>{formatLocation(memory)}</em>
-              </div>
+        {isSheetExpanded && selectedMemory && (
+          <div className="selected-map-detail">
+            <strong>{selectedMemory.title}</strong>
+            <p>{selectedMemory.message}</p>
+            {selectedGroup && selectedGroup.memories.length > 1 && (
+              <span>같은 위치의 사진 {selectedGroup.memories.length}장</span>
+            )}
+            <button type="button" onClick={() => setIsSheetExpanded(false)}>
+              뒤로가기
             </button>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {!isSheetExpanded && (
+          <div className="map-place-list">
+            {mappedMemories.map((memory) => (
+              <button
+                className={
+                  selectedMemory?.id === memory.id
+                    ? "map-place-card active"
+                    : "map-place-card"
+                }
+                key={memory.id}
+                onClick={() => selectMapMemory(memory)}
+              >
+                <img src={memory.image} alt="" />
+                <div>
+                  <strong>{memory.place}</strong>
+                  <small>{memory.date}</small>
+                  <em>{formatLocation(memory)}</em>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </aside>
     </section>
   );

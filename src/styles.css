@@ -706,12 +706,14 @@ p {
   height: 100svh;
   min-height: 0;
   position: relative;
+  isolation: isolate;
   overflow: hidden;
   border-radius: 0;
 }
 
 .map-panel {
   position: absolute;
+  z-index: 0;
   inset: 0;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.36);
@@ -753,6 +755,7 @@ p {
 }
 
 .memory-map-marker {
+  position: relative;
   display: grid;
   width: 52px;
   height: 52px;
@@ -774,9 +777,25 @@ p {
   object-fit: cover;
 }
 
+.memory-map-marker span {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  min-width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+  background: var(--secondary);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
 .map-bottom-sheet {
   position: absolute;
-  z-index: 6;
+  z-index: 10;
   right: 0;
   bottom: 0;
   left: 0;
@@ -859,6 +878,43 @@ p {
   margin-top: 4px;
   color: rgba(16, 47, 78, 0.46);
   font-size: 12px;
+  font-weight: 900;
+}
+
+.selected-map-detail {
+  display: grid;
+  gap: 5px;
+  padding: 0 4px 12px;
+}
+
+.selected-map-detail strong {
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.selected-map-detail p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.selected-map-detail span {
+  color: rgba(173, 36, 111, 0.64);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.selected-map-detail button {
+  justify-self: start;
+  min-height: 32px;
+  margin-top: 5px;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--primary);
+  font-size: 11px;
   font-weight: 900;
 }
 
