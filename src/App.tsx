@@ -1,11 +1,4 @@
-import {
-  type CSSProperties,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
@@ -158,6 +151,7 @@ function mapUrl(memory: Memory) {
 
 export default function App() {
   const [view, setView] = useState<View>("intro");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(defaultFavoriteIds);
@@ -191,6 +185,11 @@ export default function App() {
     [favoriteIds],
   );
   const current = storyMemories[activeIndex] ?? storyMemories[0];
+
+  const navigateTo = (nextView: View) => {
+    setView(nextView);
+    setIsMenuOpen(false);
+  };
 
   const openStory = (index = 0) => {
     if (storyMemories.length === 0) {
@@ -252,18 +251,43 @@ export default function App() {
       <div className="aurora aurora-one" />
       <div className="aurora aurora-two" />
       <div className="phone-stage">
-        <nav className="top-actions" aria-label="화면 이동">
-          <button className="ghost-button" onClick={() => setView("intro")}>
-            <CircleIcon Icon={HomeRoundedIcon} className="nav-icon" />
-            Home
-          </button>
-          <button className="ghost-button" onClick={() => setView("gallery")}>
-            <CircleIcon Icon={PhotoLibraryRoundedIcon} className="nav-icon" />
-            Gallery
-          </button>
-          <button className="ghost-button" onClick={() => setView("map")}>
-            <CircleIcon Icon={MapRoundedIcon} className="nav-icon" />
-            Map
+        <nav
+          className={isMenuOpen ? "top-actions open" : "top-actions"}
+          aria-label="화면 이동"
+        >
+          <div className="menu-items">
+            <button
+              className="ghost-button"
+              onClick={() => navigateTo("intro")}
+              aria-label="홈으로 이동"
+            >
+              <CircleIcon Icon={HomeRoundedIcon} className="nav-icon" />
+            </button>
+            <button
+              className="ghost-button"
+              onClick={() => navigateTo("gallery")}
+              aria-label="갤러리로 이동"
+            >
+              <CircleIcon Icon={PhotoLibraryRoundedIcon} className="nav-icon" />
+            </button>
+            <button
+              className="ghost-button"
+              onClick={() => navigateTo("map")}
+              aria-label="지도 보기"
+            >
+              <CircleIcon Icon={MapRoundedIcon} className="nav-icon" />
+            </button>
+          </div>
+          <button
+            className="menu-toggle"
+            onClick={() => setIsMenuOpen((open) => !open)}
+            aria-expanded={isMenuOpen}
+            aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
+          >
+            <CircleIcon
+              Icon={isMenuOpen ? CloseRoundedIcon : KeyboardArrowLeftRoundedIcon}
+              className="nav-icon"
+            />
           </button>
         </nav>
 
@@ -277,11 +301,8 @@ export default function App() {
         {view === "story" && current && (
           <MemoryStory
             memory={current}
-            memories={storyMemories}
-            index={activeIndex}
             onNext={goNext}
             onPrev={goPrev}
-            onJump={setActiveIndex}
           />
         )}
 
@@ -406,26 +427,16 @@ function CoverIntro({
 
 function MemoryStory({
   memory,
-  memories: storyMemories,
-  index,
   onNext,
   onPrev,
-  onJump,
 }: {
   memory: Memory;
-  memories: Memory[];
-  index: number;
   onNext: () => void;
   onPrev: () => void;
-  onJump: (index: number) => void;
 }) {
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const startX = useRef(0);
-  const progress =
-    storyMemories.length <= 1
-      ? 100
-      : (index / (storyMemories.length - 1)) * 100;
   const rotate = dragX / 18;
   const opacity = Math.min(Math.abs(dragX) / 120, 1);
 
@@ -438,26 +449,6 @@ function MemoryStory({
 
   return (
     <section className="screen swipe-screen">
-      <div className="timeline-wrap">
-        <div className="timeline-labels">
-          <span>Selected Story</span>
-          <span>{storyMemories.length} photos</span>
-        </div>
-        <input
-          className="timeline-slider"
-          type="range"
-          min="0"
-          max={Math.max(0, storyMemories.length - 1)}
-          value={index}
-          aria-label="스토리 사진 이동"
-          onChange={(event) => onJump(Number(event.currentTarget.value))}
-          style={{ "--timeline-progress": `${progress}%` } as CSSProperties}
-        />
-        <div className="timeline-page">
-          {formatStep(index, storyMemories.length)}
-        </div>
-      </div>
-
       <header className="memory-header">
         <div>
           <p>{memory.date}</p>
