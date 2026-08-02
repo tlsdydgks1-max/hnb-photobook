@@ -1,0 +1,113 @@
+[
+  {
+    "id": "img1",
+    "file": "/photos/img1.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img2",
+    "file": "/photos/img2.jpg",
+    "exif": {
+      "takenAt": "2025:12:31 17:12:09",
+      "latitude": 37.55668333333333,
+      "longitude": 126.60423333333333
+    }
+  },
+  {
+    "id": "img3",
+    "file": "/photos/img3.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img4",
+    "file": "/photos/img4.jpg",
+    "exif": {
+      "takenAt": "2025:04:20 17:15:59"
+    }
+  },
+  {
+    "id": "img5",
+    "file": "/photos/img5.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img6",
+    "file": "/photos/img6.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img7",
+    "file": "/photos/img7.jpg",
+    "exif": {
+      "takenAt": "2024:04:19 19:52:42",
+      "latitude": 37.55101111111111,
+      "longitude": 126.98861666666667
+    }
+  },
+  {
+    "id": "img8",
+    "file": "/photos/img8.jpg",
+    "exif": {
+      "takenAt": "2024:04:05 21:28:54",
+      "latitude": 37.533569444444446,
+      "longitude": 126.91536111111111
+    }
+  },
+  {
+    "id": "img9",
+    "file": "/photos/img9.jpg",
+    "exif": {
+      "takenAt": "2024:03:22 16:22:24",
+      "latitude": 37.51367222222222,
+      "longitude": 127.05869166666666
+    }
+  },
+  {
+    "id": "img10",
+    "file": "/photos/img10.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img11",
+    "file": "/photos/img11.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img12",
+    "file": "/photos/img12.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img13",
+    "file": "/photos/img13.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img14",
+    "file": "/photos/img14.jpg",
+    "exif": {}
+  },
+  {
+    "id": "img15",
+    "file": "/photos/img15.jpg",
+    "exif": {
+      "takenAt": "2023:06:03 16:54:04"
+    }
+  },
+  {
+    "id": "profile1",
+    "file": "/photos/profile1.jpg",
+    "exif": {
+      "takenAt": "2024:04:05 20:20:53",
+      "latitude": 37.53254722222222,
+      "longitude": 126.92028055555556
+    }
+  },
+  {
+    "id": "profile2",
+    "file": "/photos/profile2.jpg",
+    "exif": {
+      "takenAt": "2025:09:29 18:28:15"
+    }
+  }
+]
