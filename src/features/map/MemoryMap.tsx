@@ -83,7 +83,6 @@ export function MemoryMap({ memories }: MemoryMapProps) {
       memory.exif.longitude,
     );
     mapInstanceRef.current?.setCenter(position);
-    mapInstanceRef.current?.setZoom(15);
   };
 
   useEffect(() => {
