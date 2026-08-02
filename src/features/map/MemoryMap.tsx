@@ -25,8 +25,11 @@ function escapeAttribute(value: string) {
 export function MemoryMap({ memories }: MemoryMapProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<NaverMapInstance | null>(null);
+  const sheetRef = useRef<HTMLElement | null>(null);
   const sheetDragStartYRef = useRef(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [sheetHeight, setSheetHeight] = useState(0);
   const [isSheetExpanded, setIsSheetExpanded] = useState(false);
   const [loadState, setLoadState] = useState<
     "idle" | "ready" | "missing-key" | "error"
@@ -57,13 +60,19 @@ export function MemoryMap({ memories }: MemoryMapProps) {
   const selectedMemory =
     mappedMemories.find((memory) => memory.id === selectedId) ??
     mappedMemories[0];
-  const selectedGroup = selectedMemory
-    ? memoryGroups.find((group) => group.key === coordKey(selectedMemory))
+  const detailMemory = mappedMemories.find((memory) => memory.id === detailId);
+  const detailGroup = detailMemory
+    ? memoryGroups.find((group) => group.key === coordKey(detailMemory))
     : undefined;
 
   const selectMapMemory = (memory: Memory, showDetails = false) => {
     setSelectedId(memory.id);
-    setIsSheetExpanded(showDetails);
+    if (showDetails) {
+      setDetailId(memory.id);
+      setIsSheetExpanded(false);
+    } else if (detailId) {
+      setDetailId(memory.id);
+    }
 
     if (!window.naver?.maps || !memory.exif?.latitude || !memory.exif.longitude) {
       return;
@@ -76,6 +85,20 @@ export function MemoryMap({ memories }: MemoryMapProps) {
     mapInstanceRef.current?.setCenter(position);
     mapInstanceRef.current?.setZoom(15);
   };
+
+  useEffect(() => {
+    if (!sheetRef.current) return;
+
+    const updateSheetHeight = () => {
+      setSheetHeight(sheetRef.current?.offsetHeight ?? 0);
+    };
+    updateSheetHeight();
+
+    const resizeObserver = new ResizeObserver(updateSheetHeight);
+    resizeObserver.observe(sheetRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   useEffect(() => {
     if (mappedMemories.length === 0) return;
@@ -191,7 +214,49 @@ export function MemoryMap({ memories }: MemoryMapProps) {
         )}
       </div>
 
+      {detailMemory && (
+        <article
+          className={
+            isSheetExpanded
+              ? "map-detail-card glass-panel above-expanded-sheet"
+              : "map-detail-card glass-panel"
+          }
+          style={
+            isSheetExpanded ? { bottom: `calc(${sheetHeight}px + 12px)` } : undefined
+          }
+        >
+          <button
+            className="map-detail-close"
+            type="button"
+            onClick={() => setDetailId(null)}
+          >
+            닫기
+          </button>
+          <img src={detailMemory.image} alt="" />
+          <div>
+            <small>{detailMemory.date}</small>
+            <strong>{detailMemory.title}</strong>
+            <p>{detailMemory.message}</p>
+            {detailGroup && detailGroup.memories.length > 1 && (
+              <div className="map-detail-siblings">
+                {detailGroup.memories.map((memory) => (
+                  <button
+                    className={memory.id === detailMemory.id ? "active" : ""}
+                    key={memory.id}
+                    type="button"
+                    onClick={() => setDetailId(memory.id)}
+                  >
+                    <img src={memory.image} alt="" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </article>
+      )}
+
       <aside
+        ref={sheetRef}
         className={
           isSheetExpanded
             ? "map-bottom-sheet glass-panel expanded"
@@ -223,7 +288,7 @@ export function MemoryMap({ memories }: MemoryMapProps) {
         {selectedMemory && (
           <button
             className="selected-map-memory"
-            onClick={() => selectMapMemory(selectedMemory)}
+            onClick={() => selectMapMemory(selectedMemory, true)}
           >
             <img src={selectedMemory.image} alt="" />
             <div>
@@ -233,41 +298,26 @@ export function MemoryMap({ memories }: MemoryMapProps) {
           </button>
         )}
 
-        {isSheetExpanded && selectedMemory && (
-          <div className="selected-map-detail">
-            <strong>{selectedMemory.title}</strong>
-            <p>{selectedMemory.message}</p>
-            {selectedGroup && selectedGroup.memories.length > 1 && (
-              <span>같은 위치의 사진 {selectedGroup.memories.length}장</span>
-            )}
-            <button type="button" onClick={() => setIsSheetExpanded(false)}>
-              뒤로가기
+        <div className="map-place-list">
+          {mappedMemories.map((memory) => (
+            <button
+              className={
+                selectedMemory?.id === memory.id
+                  ? "map-place-card active"
+                  : "map-place-card"
+              }
+              key={memory.id}
+              onClick={() => selectMapMemory(memory)}
+            >
+              <img src={memory.image} alt="" />
+              <div>
+                <strong>{memory.place}</strong>
+                <small>{memory.date}</small>
+                <em>{formatLocation(memory)}</em>
+              </div>
             </button>
-          </div>
-        )}
-
-        {!isSheetExpanded && (
-          <div className="map-place-list">
-            {mappedMemories.map((memory) => (
-              <button
-                className={
-                  selectedMemory?.id === memory.id
-                    ? "map-place-card active"
-                    : "map-place-card"
-                }
-                key={memory.id}
-                onClick={() => selectMapMemory(memory)}
-              >
-                <img src={memory.image} alt="" />
-                <div>
-                  <strong>{memory.place}</strong>
-                  <small>{memory.date}</small>
-                  <em>{formatLocation(memory)}</em>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+          ))}
+        </div>
       </aside>
     </section>
   );
